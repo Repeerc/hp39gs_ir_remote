@@ -67,6 +67,7 @@ void volatile send(int samps)
 			}
 		} 
 	} 
+	sys_sleep(80);
 }
 
 uint32_t volatile record()
@@ -103,10 +104,18 @@ uint32_t volatile record()
 				}
 			}else{
 				i++;
-				if(i > bsz)break;
+				if(i >= bsz){
+					pas[i-1] = curtick;
+					return -1;
+					break;
+				}
 				pas[i] = curtick;
 				i++;
-				if(i > bsz)break;
+				if(i >= bsz){
+					pas[i-1] = curtick;
+					return -1;
+					break;
+				}
 			}
 			lasttick = curtick;
 			sb = sa;
@@ -161,6 +170,13 @@ void do_rec()
 	sys_sleep(500);
 	
 	uint32_t cnt = record();
+	if(cnt == -1)
+	{
+		printf("ERROR: Overflow!!\r\n");
+	 	while(!keyb_isON()); 
+		sys_sleep(200);
+		return ;
+	}
 	printf("Receive samples:%d\r\n", cnt);
 	sys_sleep(200);
 	printf("[Enter]: Save.\r\n");
@@ -255,7 +271,11 @@ int main(void){
 	}
 	
 	sat_addrs = obj->addr + 10;
-	 
+	
+	
+	
+	//while(!keyb_isON());
+	//sys_sleep(300);
 	
 	ir_init();
 	
